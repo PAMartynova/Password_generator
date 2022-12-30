@@ -1,6 +1,9 @@
-from django.shortcuts import render
-from django.http import HttpResponse
+from django.shortcuts import render, redirect
 import random
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.models import User
+from django.db import IntegrityError
+from django.contrib.auth import login, logout, authenticate
 
 def home(request):
     return render(request, 'generator/home.html')
@@ -27,3 +30,35 @@ def password(request):
 
     return render(request, 'generator/password.html', {'password':password})
 
+
+def signupuser(request):
+    if request.method == 'GET':
+        return render(request, 'generator/signupuser.html', {'form':UserCreationForm()})
+    else:
+        if request.POST['password1'] == request.POST['password2']:
+            try:
+                user = User.objects.create_user(username=request.POST['username'], password=request.POST['password1'])
+                user.save()
+                login(request, user)
+                return redirect('home')
+            except IntegrityError:
+                return render(request, 'generator/signupuser.html', {'form':UserCreationForm(), 'error': 'This username has already been taken. Please, choose another one'})
+        else:
+            return render(request, 'generator/signupuser.html', {'form':UserCreationForm(), 'error': 'Password did not match. Please, try again'})
+
+
+def logoutuser(request):
+    if request.method == "POST":
+        logout(request)
+        return redirect('home')
+
+def loginuser(request):
+    if request.method == 'GET':
+        return render(request, 'generator/loginuser.html', {'form':AuthenticationForm()})
+    else:
+        user = authenticate(request, username=request.POST['username'], password=request.POST['password'])
+        if not user:
+            return render(request, 'generator/loginuser.html', {'form':AuthenticationForm(), 'error': 'Username and password did not match'})
+        else:
+            login(request, user)
+            return redirect('home')
