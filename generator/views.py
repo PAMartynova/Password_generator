@@ -4,6 +4,8 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.contrib.auth import login, logout, authenticate
+from .forms import NewPasswordForm
+from .models import Passw
 
 def home(request):
     return render(request, 'generator/home.html')
@@ -62,3 +64,23 @@ def loginuser(request):
         else:
             login(request, user)
             return redirect('home')
+
+
+def createpassw(request):
+    if request.method == 'GET':
+        return render(request, 'generator/createpassw.html', {'form':NewPasswordForm()})
+    else:
+        try:
+            form = NewPasswordForm(request.POST)
+            new_form = form.save(commit=False)
+            new_form.user = request.user
+            new_form.save()
+            
+            return redirect('userpage')
+        except ValueError:
+            return render(request, 'generator/createpassw.html', {'form':NewPasswordForm(), 'error': 'Oops, try again'})
+
+
+def userpage(request):
+    notes = Passw.objects.filter(user=request.user)
+    return render(request, 'generator/userpage.html', {'notes': notes})

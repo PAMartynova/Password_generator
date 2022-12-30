@@ -18,17 +18,15 @@
     <div align="center">
         <br>
         <br><br>
-        <h1>Here you can log in</h1>
+        <h1>Here are all your saved passwords</h1>
         <br>
-        {{ error }}
-        <br><br>
-        <form method="POST">
-            {% csrf_token %}
-            {{ form }}
-            <br><br>
-            <button type="submit">Log IN</button>
-        </form>
+        {% for note in notes %}
+        <p>Title: {{ note.title }}</p>
+        <p>Password: {{ note.passw }}</p>
+        <br>
+        {% endfor %}
     </div>
 </div>
+
 
 {% endblock %}
