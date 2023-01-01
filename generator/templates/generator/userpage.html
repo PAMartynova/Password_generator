@@ -30,6 +30,15 @@
         <br><br><br>
         <h1>Here are all your saved passwords</h1>
         <br>
+        <form method="GET" action="{% url 'userpage' %}">
+            <label for="sort_by">Sort by:</label>
+            <select name="sort_by" id="sort_by">
+              <option value="date">Date</option>
+              <option value="title">Title</option>
+            </select>
+            <button type="submit">Sort</button>
+        </form>
+        <br>
         {% for note in notes %}
         <div class="passw-card">
             <p>TITLE: {{ note.title }}</p>

@@ -91,7 +91,11 @@ def createpassw(request):
 
 
 def userpage(request):
-    notes = Passw.objects.filter(user=request.user)
+    notes = Passw.objects.filter(user=request.user).order_by('date')
+    if 'sort_by' in request.GET:
+        sort_by = request.GET['sort_by']
+        if sort_by == 'title':
+            notes = notes.order_by('title')
     return render(request, 'generator/userpage.html', {'notes': notes})
 
 
