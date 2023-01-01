@@ -6,6 +6,7 @@ from django.db import IntegrityError
 from django.contrib.auth import login, logout, authenticate
 from .forms import NewPasswordForm
 from .models import Passw
+from django.contrib import messages
 
 def home(request):
     return render(request, 'generator/home.html')
@@ -29,7 +30,7 @@ def password(request):
         chars += lowercase_letters
 
     password = ''.join(random.sample(chars, length))
-
+    messages.success(request, password)
     return render(request, 'generator/password.html', {'password':password})
 
 
@@ -68,9 +69,14 @@ def loginuser(request):
 
 def createpassw(request):
     if request.method == 'GET':
-        return render(request, 'generator/createpassw.html', {'form':NewPasswordForm()})
+        stored_messages = messages.get_messages(request)
+        for message in stored_messages:
+            password = message
+        form = NewPasswordForm(initial={'passw': password})
+        return render(request, 'generator/createpassw.html', {'form':form, 'password': password})
     else:
         try:
+            
             form = NewPasswordForm(request.POST)
             new_form = form.save(commit=False)
             new_form.user = request.user
