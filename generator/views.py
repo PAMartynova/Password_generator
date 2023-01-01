@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 import random
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
@@ -29,7 +29,7 @@ def password(request):
     if chars == '':
         chars += lowercase_letters
 
-    password = ''.join(random.sample(chars, length))
+    password = ''.join(random.choices(chars, k=length))
     messages.success(request, password)
     return render(request, 'generator/password.html', {'password':password})
 
@@ -69,11 +69,14 @@ def loginuser(request):
 
 def createpassw(request):
     if request.method == 'GET':
-        stored_messages = messages.get_messages(request)
-        for message in stored_messages:
-            password = message
-        form = NewPasswordForm(initial={'passw': password})
-        return render(request, 'generator/createpassw.html', {'form':form, 'password': password})
+        try:
+            stored_messages = messages.get_messages(request)
+            for message in stored_messages:
+                password = message
+            form = NewPasswordForm(initial={'passw': password})
+            return render(request, 'generator/createpassw.html', {'form':form, 'password': password})
+        except:
+            return render(request, 'generator/createpassw.html', {'form':NewPasswordForm(), 'error': 'Oops, something went wrong'})
     else:
         try:
             
@@ -90,3 +93,10 @@ def createpassw(request):
 def userpage(request):
     notes = Passw.objects.filter(user=request.user)
     return render(request, 'generator/userpage.html', {'notes': notes})
+
+
+def deletepassw(request, passw_pk):
+    passw = get_object_or_404(Passw, pk=passw_pk ,user=request.user)
+    if request.method == 'POST':
+        passw.delete()
+        return redirect('userpage')
