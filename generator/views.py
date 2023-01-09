@@ -7,6 +7,8 @@ from django.contrib.auth import login, logout, authenticate
 from .forms import NewPasswordForm
 from .models import Passw
 from django.contrib import messages
+from Crypto.Cipher import AES
+import hashlib
 
 def home(request):
     return render(request, 'generator/home.html')
@@ -70,18 +72,26 @@ def loginuser(request):
 def createpassw(request):
     if request.method == 'GET':
         try:
-            stored_messages = messages.get_messages(request)
-            for message in stored_messages:
-                password = message
-            form = NewPasswordForm(initial={'passw': password})
-            return render(request, 'generator/createpassw.html', {'form':form, 'password': password})
+
+            form = NewPasswordForm()
+            return render(request, 'generator/createpassw.html', {'form':form})
         except:
             return render(request, 'generator/createpassw.html', {'form':NewPasswordForm(), 'error': 'Oops, something went wrong'})
     else:
         try:
-            
+            stored_messages = messages.get_messages(request)
+            for message in stored_messages:
+                password = message
+
             form = NewPasswordForm(request.POST)
             new_form = form.save(commit=False)
+            
+            key = hashlib.sha256(str(request.user).encode()).digest()
+
+            cipher = AES.new(key, AES.MODE_EAX)
+            new_form.passw, tag = cipher.encrypt_and_digest(str(password).encode())
+            new_form.tag = tag
+            new_form.nonce = cipher.nonce
             new_form.user = request.user
             new_form.save()
             
@@ -92,10 +102,19 @@ def createpassw(request):
 
 def userpage(request):
     notes = Passw.objects.filter(user=request.user).order_by('date')
+    print(request.user)
+
     if 'sort_by' in request.GET:
         sort_by = request.GET['sort_by']
         if sort_by == 'title':
             notes = notes.order_by('title')
+    for note in notes:
+
+        key = hashlib.sha256(str(request.user).encode()).digest()
+        decipher = AES.new(key, AES.MODE_EAX, nonce=note.nonce)
+        note.passw = decipher.decrypt(note.passw)
+        note.passw = note.passw.decode()
+        
     return render(request, 'generator/userpage.html', {'notes': notes})
 
 

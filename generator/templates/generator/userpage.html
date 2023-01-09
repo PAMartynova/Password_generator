@@ -22,6 +22,17 @@
         }
 
     </style>
+    <script>
+        function CopyToClipboard(id)
+        {
+        var r = document.createRange();
+        r.selectNode(document.getElementById(id));
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(r);
+        document.execCommand('copy');
+        window.getSelection().removeAllRanges();
+        }
+    </script>
 </head>
 
 <div class="container">
@@ -41,8 +52,13 @@
         <br>
         {% for note in notes %}
         <div class="passw-card">
-            <p>TITLE: {{ note.title }}</p>
-            <p>PASSWORD: {{ note.passw }}</p>
+            <p>TITLE: &emsp;&emsp;<b>{{ note.title }}</b></p>
+            <p>PASSWORD: &emsp;&emsp;<b  id="forcopy">{{ note.passw }}</b>&emsp;&emsp;&emsp;&emsp;<a href="#" onclick="CopyToClipboard('forcopy');return false;" link="black" vlink="black" alink="black">
+                Copy Password
+               </a></p>
+
+
+
             <form method="POST" action="{% url 'deletepassw' note.id %}">
                 {% csrf_token %}
                 <button type="submit">Delete</button>
